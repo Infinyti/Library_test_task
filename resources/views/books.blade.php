@@ -4,6 +4,8 @@
 
 @section('content')
 
+    <!--<?php var_dump($books);?>-->
+
     <!-- Add Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -14,12 +16,12 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('books.store') }}" method="post" enctype="multipart/form-data">
+                <form  enctype="multipart/form-data" id="addForm">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Название книги</label>
-                            <input type="text" name="name" class="form-control" placeholder="Введите название">
+                            <input type="text" name="name" class="form-control" required placeholder="Введите название">
                         </div>
                         <div class="form-group">
                             <label>Описание</label>
@@ -27,7 +29,7 @@
                         </div>
                         <div class="form-group">
                             <label>Автор</label>
-                            <select name="author_id" class="form-control">
+                            <select name="author_id" required class="form-control">
                                 <option value="" disabled selected>Выберите автора</option>
                                 @foreach($authors as $author)
                                     <option value="{{$author->id}}">{{$author->last_name}} {{$author->name}}</option>
@@ -60,7 +62,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="books" method="post" id="editForm" enctype="multipart/form-data">
+                <form id="editForm" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
@@ -91,7 +93,7 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                        <button type="submit" class="btn btn-primary">Обновить</button>
+                        <button type="submit" class="btn btn-primary" >Обновить</button>
                     </div>
                 </form>
             </div>
@@ -168,6 +170,33 @@
     <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+
+            $('#addForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $('#addForm')[0];
+                var data = new FormData(form);
+
+                console.log(data);
+
+                $.ajax({
+                    type: "POST",
+                    url: "/books",
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#exampleModal').modal('hide')
+                        location.reload();
+                    },
+                    error: function (error) {
+                        alert('Данные не могут быть добавлены');
+                    }
+                });
+
+            })
+
+
             var table = $('#datatable').DataTable({
                 "language": {
                     "processing": "Подождите...",
@@ -197,25 +226,56 @@
                             "1": "Выбрана одна запись"
                         }
                     }
-                }
+                },
+                "order": [[ 1, 'asc' ]],
+                "pagingType": "numbers",
+                "paging": true
 
             });
 
+            table.page.len( 15 ).draw();
+
             $('.edit').click(function () {
+                $('#editModal').modal('show');
+
                 var id = $(this).attr('data-id');
                 var name = $(this).attr('data-name');
                 var desc = $(this).attr('data-desc');
                 var authorId = $(this).attr('data-author-id');
                 var img = $(this).attr('data-img');
 
+                $('#id').val(id);
                 $('#name').val(name);
                 $('#description').val(desc);
                 $('#author_id').val(authorId);
                 $("#upload_img").attr("src", img);
 
-                $('#editForm').attr('action', '/books/' + id);
-                $('#editModal').modal('show');
             });
+
+            $('#editForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $('#editForm')[0];
+                var data = new FormData(form);
+                var id = $('#id').val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/books/" + id,
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#editModal').modal('hide')
+                        location.reload();
+                    },
+                    error: function (error) {
+                        alert('Данные не могут быть добавлены');
+                    }
+                });
+
+            })
+
 
         });
     </script>

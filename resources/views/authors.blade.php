@@ -14,16 +14,16 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('authors.store') }}" method="post">
+                <form  id="addAuthForm">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Имя</label>
-                            <input type="text" name="name" class="form-control" placeholder="Введите имя автора">
+                            <input type="text" name="name" class="form-control" required placeholder="Введите имя автора">
                         </div>
                         <div class="form-group">
                             <label>Фамилия</label>
-                            <input type="text" name="last_name" class="form-control" placeholder="Введите фамилию автора">
+                            <input type="text" name="last_name" class="form-control" min="3" required placeholder="Введите фамилию автора">
                         </div>
                         <div class="form-group">
                             <label>Отчество</label>
@@ -55,6 +55,7 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
+                        <input type="hidden" name="id" id="id">
                         <div class="form-group">
                             <label>Имя</label>
                             <input type="text" name="name" id="name" class="form-control" placeholder="Введите имя автора">
@@ -144,6 +145,30 @@
     <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
+
+            $('#addAuthForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $('#addAuthForm')[0];
+                var data = new FormData(form);
+
+                $.ajax({
+                    type: "POST",
+                    url: "/authors",
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#exampleModal').modal('hide')
+                        location.reload();
+                    },
+                    error: function (error) {
+                        alert('Данные не могут быть добавлены');
+                    }
+                });
+
+            })
+
             var table = $('#datatable').DataTable({
                 "language": {
                     "processing": "Подождите...",
@@ -173,24 +198,53 @@
                             "1": "Выбрана одна запись"
                         }
                     }
-                }
+                },
+                "order": [[ 1, 'asc' ]],
+                "pagingType": "numbers",
+                "paging": true
 
             });
 
+            table.page.len( 15 ).draw();
+
             $('.edit').click(function () {
+                $('#editAuthModal').modal('show');
 
                 var id = $(this).attr('data-id');
                 var name = $(this).attr('data-name');
                 var lname = $(this).attr('data-lname');
                 var patronymic = $(this).attr('data-patron');
 
+                $('#id').val(id);
                 $('#name').val(name);
                 $('#last_name').val(lname);
                 $('#patronymic').val(patronymic);
 
-                $('#editAuthForm').attr('action', '/authors/' + id);
-                $('#editAuthModal').modal('show');
             });
+
+            $('#editAuthForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $('#editAuthForm')[0];
+                var data = new FormData(form);
+                var id = $('#id').val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/authors/" + id,
+                    data: data,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $('#editAuthModal').modal('hide')
+                        location.reload();
+                    },
+                    error: function (error) {
+                        alert('Данные не могут быть добавлены');
+                    }
+                });
+
+            })
 
         });
     </script>
